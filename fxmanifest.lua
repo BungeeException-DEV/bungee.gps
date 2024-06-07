@@ -6,7 +6,8 @@ description 'GPS Tracker Script'
 version '1.0'
 
 shared_scripts {
-    'shared/config.lua'
+    'shared/config.lua',
+    '@qb-core/import.lua'
 }
 
 client_scripts {
