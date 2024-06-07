@@ -1,46 +1,67 @@
 # madv.gps
 
-# QBCore GPS-Tracker Script
+# QBCore GPS Tracker Script
 
-## Beschreibung (Deutsch)
-Dieses QBCore-Skript ermöglicht es Spielern, die ein bestimmtes Item (z.B. "GPS-Tracker") in ihrem Inventar haben, auf der Karte sichtbar zu sein. Spieler derselben Job- oder Gang-Gruppe können einander sehen, solange sie das Item ebenfalls besitzen. Die Blips auf der Karte werden alle 5 Sekunden aktualisiert und verschwinden, wenn das Item aus dem Inventar entfernt wird. Eine Konfigurationsdatei erlaubt es, die relevanten Jobs/Gangs und die Farbe der Blips zu definieren. Die Blips werden stets ganz oben in der Liste angezeigt und zeigen den Vor- und Nachnamen des Spielers an, zusammen mit der Kennzeichnung, ob es sich um ein Job- oder Gang-Mitglied handelt.
+# Englisch
+This script allows players to see their colleagues from the same job or gang on the map if they have a GPS tracker item in their inventory. The blips are updated every 5 seconds and will show the player's first and last name. 
 
-## Description (English)
-This QBCore script allows players who have a specific item (e.g., "GPS-Tracker") in their inventory to be visible on the map. Players of the same job or gang can see each other as long as they also possess the item. The blips on the map update every 5 seconds and disappear when the item is removed from the inventory. A configuration file allows defining the relevant jobs/gangs and the color of the blips. The blips are always displayed at the top of the list and show the player's first and last name, along with a designation of whether they are a job or gang member.
+# German
+Dieses Skript ermöglicht es Spielern, ihre Kollegen mit dem gleichen Job oder aus der gleichen Gang auf der Karte zu sehen, wenn sie einen GPS-Tracker im Inventar haben. Die Blips werden alle 5 Sekunden aktualisiert und zeigen den Vor- und Nachnamen des Spielers an.
+
+## Features
+- Display blips for players in the same job or gang.
+- Customizable job and gang configurations.
+- Blips are updated every 5 seconds.
+- Blips show the player's first and last name.
+- Reload command to refresh GPS tracking.
 
 ## Installation
+1. Add the script to your QBCore resources folder.
+2. Ensure the script is started in your server configuration.
 
-### Download and Add Files
-1. Download the following files and add them to your QBCore server:
-   - `config.lua`
-   - `client.lua`
-   - `server.lua`
-   - `utils.lua`
-   - `fxmanifest.lua`
+## Configuration
+Edit the `config.lua` file to customize the jobs and gangs, including their blip colors.
 
-### Add "GPS Tracker" Item
-2. Open the `qb-core/shared/items.lua` file and add the following code:
-   ```lua
-   ['gps_tracker'] = {
-       ['name'] = 'gps_tracker',
-       ['label'] = 'GPS Tracker',
-       ['weight'] = 200,
-       ['type'] = 'item',
-       ['image'] = 'gps_tracker.png',
-       ['unique'] = true,
-       ['useable'] = true,
-       ['shouldClose'] = false,
-       ['combinable'] = nil,
-       ['description'] = 'A device that shows the location of the bearer.'
-   },
+```lua
+Config = {
+    ItemName = "gps_tracker",
+    BlipUpdateInterval = 5000,  -- Update interval in milliseconds
+    Jobs = {
+        police = { blipColor = 3 },
+        ambulance = { blipColor = 1 },
+        mechanic = { blipColor = 5 },
+        -- Add more jobs here
+    },
+    Gangs = {
+        ballas = { blipColor = 5 },
+        vagos = { blipColor = 46 },
+        -- Add more gangs here
+    }
+}
+```
 
-### Add Item Image
-3. Create an image for the GPS Tracker and save it as gps_tracker.png in the qb-inventory/html/images directory.
+## Adding the GPS Tracker Item
+Add the following entry to your shared/items.lua file in QBCore:
 
-### Restart the Server
-4. Restart your QBCore server to apply the changes.
+```lua
+['gps_tracker'] = {
+    name = 'gps_tracker',
+    label = 'GPS Tracker',
+    weight = 200,
+    type = 'item',
+    image = 'gps.png',
+    unique = false,
+    useable = false,
+    shouldClose = true,
+    combinable = nil,
+    description = 'A GPS tracker to see your colleagues on the map.'
+}
+```
 
-### Notes
-- Ensure the gps_tracker.png image is correctly placed in the qb-inventory/html/images directory.
-- The blips on the map automatically update every 5 seconds.
-- Players must have the gps_tracker item in their inventory to be visible to other players of the same job or gang group.
+## Commands
+/reloadgps - Reloads the GPS tracking.
+
+## Usage
+- Ensure the players have the gps_tracker item in their inventory.
+- Players will automatically see their colleagues on the map.
+- Use the /reloadgps command if needed to refresh the GPS tracking.
