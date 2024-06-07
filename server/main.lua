@@ -1,6 +1,5 @@
-QBCore = exports['qb-core']:GetCoreObject()
+local QBCore = exports['qb-core']:GetCoreObject()
 
--- Callback to retrieve the blip data for the group
 QBCore.Functions.CreateCallback('madv.gps:server:GetGroupBlipData', function(source, cb, jobName, gangName)
     local src = source
     local xPlayer = QBCore.Functions.GetPlayer(src)
@@ -43,7 +42,12 @@ QBCore.Functions.CreateCallback('madv.gps:server:GetGroupBlipData', function(sou
                         local coords = GetEntityCoords(GetPlayerPed(targetPlayer.PlayerData.source))
                         totalCoords = totalCoords + coords
                         count = count + 1
-                        table.insert(trackedPlayers, targetPlayer.PlayerData)
+                        table.insert(trackedPlayers, {
+                            jobName = targetJobName,
+                            gangName = targetGangName,
+                            firstName = targetPlayer.PlayerData.charinfo.firstname,
+                            lastName = targetPlayer.PlayerData.charinfo.lastname
+                        })
                         break
                     end
                 end
@@ -53,17 +57,32 @@ QBCore.Functions.CreateCallback('madv.gps:server:GetGroupBlipData', function(sou
 
     if count > 0 then
         local averageCoords = totalCoords / count
-        local playerNames = table.concat(table.map(trackedPlayers, function(player)
+        local playerNames = ""
+        for i, player in ipairs(trackedPlayers) do
+            local jobConfig = Config.Jobs[player.jobName]
+            local gangConfig = Config.Gangs[player.gangName]
             local prefix = ""
-            if Config.Jobs[player.job.name] and Config.Gangs[player.gang.name] then
-                prefix = "Job/Gang: "
-            elseif Config.Jobs[player.job.name] then
+
+            if jobConfig and gangConfig then
+                if jobName == player.jobName and gangName == player.gangName then
+                    prefix = "Job/Gang: "
+                elseif jobName == player.jobName then
+                    prefix = "Job: "
+                elseif gangName == player.gangName then
+                    prefix = "Gang: "
+                end
+            elseif jobConfig then
                 prefix = "Job: "
-            elseif Config.Gangs[player.gang.name] then
+            elseif gangConfig then
                 prefix = "Gang: "
             end
-            return prefix .. player.charinfo.firstname .. " " .. player.charinfo.lastname
-        end), ", ")
+
+            playerNames = playerNames .. prefix .. player.firstName .. " " .. player.lastName
+            if i < #trackedPlayers then
+                playerNames = playerNames .. ", "
+            end
+        end
+        
         cb({
             coords = averageCoords,
             blipColor = blipColor,
@@ -72,4 +91,16 @@ QBCore.Functions.CreateCallback('madv.gps:server:GetGroupBlipData', function(sou
     else
         cb(nil)
     end
+end)
+
+RegisterNetEvent('madv.gps:server:UpdateJob', function()
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    TriggerClientEvent('QBCore:Client:OnJobUpdate', src, Player.PlayerData.job)
+end)
+
+RegisterNetEvent('madv.gps:server:UpdateGang', function()
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    TriggerClientEvent('QBCore:Client:OnGangUpdate', src, Player.PlayerData.gang)
 end)
