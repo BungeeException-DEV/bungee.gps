@@ -1,4 +1,10 @@
-local QBCore = exports['qb-core']:GetCoreObject()
+local Framework = nil
+if Config.Framework == 'QBCore' then
+    Framework = exports['qb-core']:GetCoreObject()
+elseif Config.Framework == 'ESX' or Config.Framework == 'ESX_Legacy' then
+    Framework = exports['es_extended']:getSharedObject()
+end
+
 local groupBlip = nil
 
 local function updateGroupBlip(coords, blipColor, groupName)
@@ -20,7 +26,7 @@ local function updateGroupBlip(coords, blipColor, groupName)
 end
 
 local function hasGpsTracker()
-    local player = QBCore.Functions.GetPlayerData()
+    local player = Framework.GetPlayerData()
     for _, item in ipairs(player.items) do
         if item.name == Config.ItemName then
             return true
@@ -30,9 +36,9 @@ local function hasGpsTracker()
 end
 
 local function updateBlip()
-    local player = QBCore.Functions.GetPlayerData()
+    local player = Framework.GetPlayerData()
     if hasGpsTracker() then
-        QBCore.Functions.TriggerCallback('madv.gps:server:GetGroupBlipData', function(groupData)
+        Framework.TriggerCallback('bungee.gps:server:GetGroupBlipData', function(groupData)
             if groupData then
                 local coords = groupData.coords
                 local blipColor = groupData.blipColor
@@ -44,7 +50,7 @@ local function updateBlip()
                     groupBlip = nil
                 end
             end
-        end, player.job.name, player.gang.name)
+        end, player.job.name, (Config.Framework == 'QBCore' and player.gang.name or nil))
     else
         if groupBlip then
             RemoveBlip(groupBlip)
@@ -55,10 +61,10 @@ end
 
 RegisterCommand('reloadgps', function()
     updateBlip()
-    QBCore.Functions.Notify('GPS reloaded')
+    Framework.Notify('GPS reloaded')
 end, false)
 
-AddEventHandler('QBCore:Client:OnPlayerLoaded', function()
+AddEventHandler('Framework:Client:OnPlayerLoaded', function()
     Citizen.CreateThread(function()
         while true do
             updateBlip()
@@ -67,27 +73,36 @@ AddEventHandler('QBCore:Client:OnPlayerLoaded', function()
     end)
 end)
 
-RegisterNetEvent('QBCore:Client:OnPlayerUnload', function()
+RegisterNetEvent('Framework:Client:OnPlayerUnload', function()
     if groupBlip then
         RemoveBlip(groupBlip)
         groupBlip = nil
     end
 end)
 
-RegisterNetEvent('QBCore:Client:OnJobUpdate', function(JobInfo)
-    QBCore.Functions.GetPlayerData().job = JobInfo
+RegisterNetEvent('Framework:Client:OnJobUpdate', function(JobInfo)
+    Framework.GetPlayerData().job = JobInfo
     updateBlip()
 end)
 
-RegisterNetEvent('QBCore:Client:OnGangUpdate', function(GangInfo)
-    QBCore.Functions.GetPlayerData().gang = GangInfo
-    updateBlip()
-end)
+if Config.Framework == 'ESX' or Config.Framework == 'ESX_Legacy' then
+    RegisterNetEvent('esx:setJob', function(JobInfo)
+        Framework.GetPlayerData().job = JobInfo
+        updateBlip()
+    end)
+end
+
+if Config.Framework == 'QBCore' then
+    RegisterNetEvent('Framework:Client:OnGangUpdate', function(GangInfo)
+        Framework.GetPlayerData().gang = GangInfo
+        updateBlip()
+    end)
+end
 
 AddEventHandler('onResourceStart', function(resourceName)
     if GetCurrentResourceName() == resourceName then
         Citizen.CreateThread(function()
-            while not QBCore.Functions.GetPlayerData().job do
+            while not Framework.GetPlayerData().job do
                 Citizen.Wait(100)
             end
             updateBlip()
