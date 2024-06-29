@@ -3,6 +3,7 @@
 ---
 
 Config = {
+    Framework = 'QBCore', -- Set to 'QBCore', 'ESX' or 'ESX_Legacy'
     ItemName = "gps_tracker",
     BlipUpdateInterval = 5000,  -- Update interval in milliseconds
     Jobs = {
