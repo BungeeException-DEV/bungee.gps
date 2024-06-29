@@ -7,7 +7,8 @@ version '1.0'
 
 shared_scripts {
     'shared/config.lua',
-    '@qb-core/import.lua'
+    '@qb-core/import.lua',
+    '@es_extended/imports.lua'
 }
 
 client_scripts {
