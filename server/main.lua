@@ -1,8 +1,13 @@
-local QBCore = exports['qb-core']:GetCoreObject()
+local Framework = nil
+if Config.Framework == 'QBCore' then
+    Framework = exports['qb-core']:GetCoreObject()
+elseif Config.Framework == 'ESX' or Config.Framework == 'ESX_Legacy' then
+    Framework = exports['es_extended']:getSharedObject()
+end
 
-QBCore.Functions.CreateCallback('madv.gps:server:GetGroupBlipData', function(source, cb, jobName, gangName)
+Framework.Functions.CreateCallback('bungee.gps:server:GetGroupBlipData', function(source, cb, jobName, gangName)
     local src = source
-    local xPlayer = QBCore.Functions.GetPlayer(src)
+    local xPlayer = Framework.GetPlayer(src)
     local blipColor = 0
     local groupTypes = {}
 
@@ -11,7 +16,7 @@ QBCore.Functions.CreateCallback('madv.gps:server:GetGroupBlipData', function(sou
         table.insert(groupTypes, 'Job')
     end
     
-    if Config.Gangs[gangName] then
+    if Config.Framework == 'QBCore' and Config.Gangs[gangName] then
         blipColor = Config.Gangs[gangName].blipColor
         table.insert(groupTypes, 'Gang')
     end
@@ -21,19 +26,19 @@ QBCore.Functions.CreateCallback('madv.gps:server:GetGroupBlipData', function(sou
         return
     end
 
-    local players = QBCore.Functions.GetPlayers()
+    local players = Framework.GetPlayers()
     local trackedPlayers = {}
     local totalCoords = vector3(0, 0, 0)
     local count = 0
 
     for _, playerId in ipairs(players) do
-        local targetPlayer = QBCore.Functions.GetPlayer(playerId)
+        local targetPlayer = Framework.GetPlayer(playerId)
         if targetPlayer and targetPlayer.PlayerData.source ~= src then
             local targetJobName = targetPlayer.PlayerData.job.name
-            local targetGangName = targetPlayer.PlayerData.gang.name
+            local targetGangName = targetPlayer.PlayerData.gang and targetPlayer.PlayerData.gang.name or nil
 
             local isJobMatch = Config.Jobs[jobName] and targetJobName == jobName
-            local isGangMatch = Config.Gangs[gangName] and targetGangName == gangName
+            local isGangMatch = Config.Framework == 'QBCore' and Config.Gangs[gangName] and targetGangName == gangName
 
             if isJobMatch or isGangMatch then
                 local items = targetPlayer.PlayerData.items
@@ -93,14 +98,16 @@ QBCore.Functions.CreateCallback('madv.gps:server:GetGroupBlipData', function(sou
     end
 end)
 
-RegisterNetEvent('madv.gps:server:UpdateJob', function()
+RegisterNetEvent('bungee.gps:server:UpdateJob', function()
     local src = source
-    local Player = QBCore.Functions.GetPlayer(src)
-    TriggerClientEvent('QBCore:Client:OnJobUpdate', src, Player.PlayerData.job)
+    local Player = Framework.GetPlayer(src)
+    TriggerClientEvent(Config.Framework == 'QBCore' and 'Framework:Client:OnJobUpdate' or 'esx:setJob', src, Player.PlayerData.job)
 end)
 
-RegisterNetEvent('madv.gps:server:UpdateGang', function()
-    local src = source
-    local Player = QBCore.Functions.GetPlayer(src)
-    TriggerClientEvent('QBCore:Client:OnGangUpdate', src, Player.PlayerData.gang)
-end)
+if Config.Framework == 'QBCore' then
+    RegisterNetEvent('bungee.gps:server:UpdateGang', function()
+        local src = source
+        local Player = Framework.GetPlayer(src)
+        TriggerClientEvent('Framework:Client:OnGangUpdate', src, Player.PlayerData.gang)
+    end)
+end
