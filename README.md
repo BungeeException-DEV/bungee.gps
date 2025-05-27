@@ -1,3 +1,5 @@
+###The scripts are no longer in development and there will be no further changes!
+
 # bungee.gps
 
 ## GPS Tracker Script for QBCore and ESX
